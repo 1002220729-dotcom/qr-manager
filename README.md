@@ -1,59 +1,76 @@
-# QR Manager
+# QR Manager — Cloudflare Workers
 
-שרת QR דינאמי — צור קישורי QR שניתן לעדכן בכל עת מבלי לשנות את הקוד המודפס.
+שרת QR דינאמי על Cloudflare Workers + KV Storage.
 
-## איך זה עובד
+## דרישות מוקדמות
 
-```
-QR מודפס  →  yourdomain.com/r/abc123  →  (הפניה בשרת)  →  הכתובת האמיתית
-```
-
-הכתובת שמקודדת ב-QR לא משתנה לעולם. היעד מנוהל בשרת ואפשר לשנותו מתי שרוצים.
+- חשבון Cloudflare (חינמי)
+- Node.js מותקן
 
 ---
 
-## התקנה מקומית
+## הגדרה ראשונית (פעם אחת)
+
+### 1. התקן את Wrangler
 
 ```bash
-git clone https://github.com/<USER>/qr-manager.git
-cd qr-manager
 npm install
-npm start
+npx wrangler login
 ```
 
-פתח את הדפדפן על `http://localhost:3000`
+הדפדפן יפתח לאישור — אשר את ההרשאות.
+
+### 2. צור KV Namespace
+
+```bash
+npx wrangler kv:namespace create QR_KV
+```
+
+הפקודה תחזיר משהו כזה:
+
+```
+{ binding = "QR_KV", id = "abc123def456..." }
+```
+
+העתק את ה-`id` ופתח את `wrangler.toml` — הדבק את ה-id בשדה המתאים:
+
+```toml
+[[kv_namespaces]]
+binding = "QR_KV"
+id = "abc123def456..."          # ← כאן
+preview_id = "abc123def456..."  # ← ואותו דבר כאן (לפיתוח מקומי)
+```
+
+### 3. פרוס
+
+```bash
+npx wrangler deploy
+```
+
+תקבל כתובת בסגנון: `https://qr-manager.<YOUR_SUBDOMAIN>.workers.dev`
 
 ---
 
-## פריסה ב-Railway (מומלץ)
+## פיתוח מקומי
 
-1. צור חשבון ב-[railway.app](https://railway.app)
-2. **New Project → Deploy from GitHub Repo**
-3. בחר את ה-repo הזה
-4. Railway יזהה את `package.json` ויריץ אוטומטית
-5. לחץ על **Generate Domain** → תקבל כתובת ציבורית
+```bash
+npm run dev
+```
 
-### משתני סביבה (אופציונלי)
-
-| משתנה | ברירת מחדל | תיאור |
-|-------|------------|-------|
-| `PORT` | `3000` | פורט השרת |
-| `DB_PATH` | `./qr.db` | מיקום קובץ SQLite |
-
-> **Railway tip:** צור Volume ב-Railway וקשר אותו ל-`/app/data`, ואז הגדר `DB_PATH=/app/data/qr.db` כדי שהמסד לא ימחק בין deploys.
+פתח `http://localhost:8787`
 
 ---
 
-## פריסה ב-Render
+## מבנה הפרויקט
 
-1. **New → Web Service → Connect GitHub repo**
-2. Build command: `npm install`
-3. Start command: `node server.js`
-4. בחר **Free tier**
-5. הוסף Disk בגודל 1GB עם Mount Path: `/data`
-6. הגדר env var: `DB_PATH=/data/qr.db`
-
----
+```
+qr-manager-cf/
+├── src/
+│   └── index.js     ← Worker: ניהול routes + HTML הממשק
+├── wrangler.toml    ← הגדרות Cloudflare
+├── package.json
+└── README.md
+```
 
 ## API
 
@@ -61,30 +78,6 @@ npm start
 |--------|------|-------|
 | `GET` | `/r/:code` | הפניה לכתובת היעד |
 | `GET` | `/api/links` | כל הקישורים |
-| `POST` | `/api/links` | יצירת קישור חדש |
+| `POST` | `/api/links` | יצירת קישור |
 | `PUT` | `/api/links/:code` | עדכון קישור |
 | `DELETE` | `/api/links/:code` | מחיקת קישור |
-
-### POST /api/links — body
-
-```json
-{
-  "name": "עמוד הנחיתה שלי",
-  "dest": "https://example.com/page",
-  "active": true
-}
-```
-
----
-
-## מבנה הפרויקט
-
-```
-qr-manager/
-├── server.js        ← שרת Express + SQLite
-├── package.json
-├── .gitignore
-├── public/
-│   └── index.html   ← ממשק הניהול
-└── README.md
-```

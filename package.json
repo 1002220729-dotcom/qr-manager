@@ -1,15 +1,12 @@
 {
   "name": "qr-manager",
   "version": "1.0.0",
-  "description": "Dynamic QR code manager with redirect server",
-  "main": "server.js",
+  "private": true,
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
   },
-  "dependencies": {
-    "better-sqlite3": "^9.4.3",
-    "cors": "^2.8.5",
-    "express": "^4.18.2"
+  "devDependencies": {
+    "wrangler": "^3.40.0"
   }
 }
