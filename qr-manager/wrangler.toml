@@ -1,0 +1,8 @@
+name = "qr-manager"
+main = "src/index.js"
+compatibility_date = "2024-03-01"
+
+[[kv_namespaces]]
+binding = "QR_KV"
+id = "442ed09179704528b5b0c16a60767e04"
+preview_id = "442ed09179704528b5b0c16a60767e04"
